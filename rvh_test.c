@@ -212,10 +212,20 @@ uint64_t mhandler(){
     if(is_ecall(cause) && ecall_args[0] == ECALL_GOTO_PRIV){
         goto_priv(ecall_args[1]); 
     } else if(!excpt.testing){
-        ERROR("untested exception!");
+        ERROR("untested exception! cause NO: %ld\n", cause);
     }
 
     if(cause & (1ULL << 63)){
+        DEBUG("mip     = 0x%lx", CSRR(CSR_MIP));
+        DEBUG("mie     = 0x%lx", CSRR(CSR_MIE));
+        DEBUG("mideleg = 0x%lx", CSRR(CSR_MIDELEG));
+        DEBUG("hip     = 0x%lx", CSRR(CSR_HIP));
+        DEBUG("hie     = 0x%lx", CSRR(CSR_HIE));
+        DEBUG("hideleg = 0x%lx", CSRR(CSR_HIDELEG));
+        DEBUG("sip     = 0x%lx", CSRR(CSR_SIP));
+        DEBUG("sie     = 0x%lx", CSRR(CSR_SIE));
+        DEBUG("vsip    = 0x%lx", CSRR(CSR_VSIP));
+        DEBUG("vsie    = 0x%lx", CSRR(CSR_VSIE));
         CSRC(mip, 1ULL << (cause &  ~(1ULL << 63)));
     }
 
@@ -272,6 +282,10 @@ uint64_t hshandler(){
     }
     
     if(cause & (1ULL << 63)){
+        DEBUG("hip   = 0x%lx", CSRR(CSR_HIP));
+        DEBUG("sip   = 0x%lx", CSRR(CSR_SIP));
+        DEBUG("vsip  = 0x%lx", CSRR(CSR_VSIP));
+
         CSRC(sip, 1ULL << (cause &  ~(1ULL << 63)));
         //CSRC(CSR_HVIP, 1ULL << (cause &  ~(1ULL << 63)));
         CSRC(CSR_HIP, 1ULL << (cause &  ~(1ULL << 63)));
@@ -321,6 +335,7 @@ uint64_t vshandler(){
     }
     
     if(cause & (1ULL << 63)){
+        DEBUG("sip   = 0x%lx", CSRR(CSR_SIP));
         CSRC(sip, 1ULL << (cause &  ~(1ULL << 63)));
     }
 

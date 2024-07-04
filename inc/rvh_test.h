@@ -119,7 +119,7 @@ extern size_t test_table_size;
 
 #define TEST_ASSERT(test, cond, ...) {\
     if(LOG_LEVEL >= LOG_DETAIL){\
-        size_t line_size = 60;\
+        size_t line_size = 80;\
         size_t size = strlen(test);\
         printf(CBLU "\t%-70.*s" CDFLT, line_size, test);\
         for(int i = line_size; i < size; i+=line_size)\
