@@ -49,7 +49,7 @@ ld_file_final:=$(build_dir)/$(ld_file)
 deps:=$(patsubst  %.o, %.d, $(objs)) $(ld_file_final).d
 dirs:=$(sort $(dir $(objs) $(deps)))
 
-GENERIC_FLAGS += -march=rv64imac -mabi=lp64 -g3 -mcmodel=medany -O3 $(inc_dirs)
+GENERIC_FLAGS += -march=rv64imac_zicsr_zifencei -mabi=lp64 -g3 -mcmodel=medany -O3 $(inc_dirs)
 ASFLAGS = $(GENERIC_FLAGS)
 CFLAGS = $(GENERIC_FLAGS)
 LDFLAGS = -ffreestanding -nostartfiles -static $(GENERIC_FLAGS)
