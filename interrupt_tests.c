@@ -1,5 +1,80 @@
 #include <rvh_test.h>
 
+bool check_xie_regs() {
+    TEST_START();
+
+    CSRW(CSR_MIDELEG, 0);
+
+    int64_t mtime_mask = ~((int64_t)0x80);
+
+    VERBOSE("setting mideleg and hideleg\n");
+    CSRW(CSR_MIDELEG, (uint64_t)-1);
+    CSRW(CSR_HIDELEG, (uint64_t)-1);
+    check_csr_wrrd("vsie", CSR_VSIE, (uint64_t) -1, 0x2222);
+    
+    VERBOSE("setting all in mie\n");
+    CSRW(mie, (uint64_t)-1);
+    check_csr_rd("hie", CSR_HIE, 0x1444);
+    check_csr_rd("sie", CSR_SIE, 0x2222);
+    check_csr_rd("vsie", CSR_VSIE, 0x2222);
+    goto_priv(PRIV_VS);
+    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x2222);
+    goto_priv(PRIV_M);
+
+    VERBOSE("clearing all in mie\n");
+    CSRW(CSR_MIE, (uint64_t)0);
+    check_csr_rd("hie", CSR_HIE, 0x0);
+    check_csr_rd("sie", CSR_SIE, 0x0);
+    check_csr_rd("vsie", CSR_VSIE, 0x0);
+    goto_priv(PRIV_VS);
+    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x0);
+    goto_priv(PRIV_M);
+
+    VERBOSE("clearing all in mideleg\n");
+    CSRW(CSR_MIDELEG, (uint64_t)0);
+    VERBOSE("setting all in mvien\n");
+    CSRW(CSR_MVIEN, (uint64_t)-1);
+    check_csr_rd("mvien", CSR_MVIEN, 0xffffffffffffe202);
+    VERBOSE("setting all in mie\n");
+    CSRW(CSR_MIE, (uint64_t)-1);
+    check_csr_rd("hie", CSR_HIE, 0x1444);
+    check_csr_rd("sie", CSR_SIE, 0x0);
+    check_csr_rd("vsie", CSR_VSIE, 0x222);
+
+    VERBOSE("setting all in sie\n");
+    CSRW(CSR_SIE, (uint64_t)-1);
+    check_csr_rd("sie", CSR_SIE, 0xffffffffffffe202);
+    check_csr_rd("vsie", CSR_VSIE, 0x2222);
+    goto_priv(PRIV_VS);
+    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x2222);
+    goto_priv(PRIV_M);
+
+    VERBOSE("clearing all in mie\n");
+    CSRW(CSR_MIE, (uint64_t)0);
+    check_csr_rd("hie", CSR_HIE, 0x0);
+    check_csr_rd("sie", CSR_SIE, 0xffffffffffffe202);
+    check_csr_rd("vsie", CSR_VSIE, 0x2000);
+    goto_priv(PRIV_VS);
+    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x2000);
+    goto_priv(PRIV_M);
+
+    VERBOSE("clearing all in sie\n");
+    CSRW(CSR_SIE, (uint64_t)0);
+    check_csr_rd("sie", CSR_SIE, 0x0);
+    check_csr_rd("vsie", CSR_VSIE, 0x0);
+    goto_priv(PRIV_VS);
+    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x0);
+    goto_priv(PRIV_M);
+
+    VERBOSE("clearing all in hideleg");
+    CSRW(CSR_HIDELEG, (uint64_t)0);
+    VERBOSE("setting all in hvien");
+    CSRW(CSR_HVIEN, (uint64_t)-1);
+    check_csr_wrrd("vsie", CSR_VSIE, (uint64_t)-1, 0xffffffffffffe000);
+
+    TEST_END();
+}
+
 bool check_xip_regs(){
 
     TEST_START();
