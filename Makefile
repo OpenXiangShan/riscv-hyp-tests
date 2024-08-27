@@ -35,6 +35,7 @@ c_srcs := main.c page_tables.c rvh_test.c interrupt_tests.c\
 	translation_tests.c	test_register.c virtual_instruction.c\
 	hfence_tests.c wfi_tests.c tinst_tests.c\
 	apt_tests.c\
+	tval_inst_tests.c\
 	$(addprefix $(plat_dir)/, $(notdir $(wildcard $(plat_dir)/*.c)))
 asm_srcs := boot.S handlers.S  $(wildcard $(plat_dir)/*.S)
 ld_file:=linker.ld
@@ -61,7 +62,7 @@ $(TARGET).bin: $(TARGET).elf
 
 $(TARGET).elf: $(objs) $(ld_file_final)
 	$(CC) $(LDFLAGS) -T$(ld_file_final) $(objs) -o $@
-	$(OBJDUMP) -S $@ > $(TARGET).asm
+	$(OBJDUMP) -S -d $@ > $(TARGET).asm
 	$(READELF) -a -W $@ > $(@).txt
 
 $(build_dir)/%.o: %.[c,S] $(build_dir)/%.d
