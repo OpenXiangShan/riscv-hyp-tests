@@ -36,6 +36,7 @@ c_srcs := main.c page_tables.c rvh_test.c interrupt_tests.c\
 	hfence_tests.c wfi_tests.c tinst_tests.c\
 	apt_tests.c\
 	tval_inst_tests.c\
+	zimop_tests.c\
 	$(addprefix $(plat_dir)/, $(notdir $(wildcard $(plat_dir)/*.c)))
 asm_srcs := boot.S handlers.S  $(wildcard $(plat_dir)/*.S)
 ld_file:=linker.ld
