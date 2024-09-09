@@ -1,11 +1,24 @@
 #include <rvh_test.h>
 
+bool check_xie_read(int MIDELEG, int MVIEN, int HIDELEG, int HVIEN);
+bool check_xip_read(int STCE, int MIDELEG, int MVIEN, int HIDELEG, int HVIEN);
+
 bool check_xie_regs() {
     TEST_START();
 
     CSRW(CSR_MIDELEG, 0);
 
     int64_t mtime_mask = ~((int64_t)0x80);
+
+    for (int iMIDELEG = 0; iMIDELEG < 2; iMIDELEG ++) {
+        for (int iMVIEN = 0; iMVIEN < 2; iMVIEN ++) {
+            for (int iHIDELEG = 0; iHIDELEG < 2; iHIDELEG ++) {
+                for (int iHVIEN = 0; iHVIEN < 2; iHVIEN ++) {
+                    check_xie_read(iMIDELEG, iMVIEN, iHIDELEG, iHVIEN);
+                }
+            }
+        }
+    }
 
     VERBOSE("setting mideleg and hideleg\n");
     CSRW(CSR_MIDELEG, (uint64_t)-1);
@@ -79,7 +92,17 @@ bool check_xip_regs(){
 
     TEST_START();
 
-    CSRW(mideleg, 0);
+    for (int iSTCE = 0; iSTCE < 2; iSTCE ++) {
+        for (int iMIDELEG = 0; iMIDELEG < 2; iMIDELEG ++) {
+            for (int iMVIEN = 0; iMVIEN < 2; iMVIEN ++) {
+                for (int iHIDELEG = 0; iHIDELEG < 2; iHIDELEG ++) {
+                    for (int iHVIEN = 0; iHVIEN < 2; iHVIEN ++) {
+                        check_xip_read(iSTCE, iMIDELEG, iMVIEN, iHIDELEG, iHVIEN);
+                    }
+                }
+            }
+        }
+    }
 
     int64_t mtime_mask = ~((int64_t)0x80);
 
@@ -167,4 +190,97 @@ bool interrupt_tests(){
         excpt.triggered && excpt.cause == CAUSE_SSI && excpt.priv == PRIV_VS);
 
     TEST_END();
+}
+
+bool check_xip_read(
+    int STCE, 
+    int MIDELEG,
+    int MVIEN,
+    int HIDELEG,
+    int HVIEN
+) {
+    CSRW(CSR_MENVCFG, !STCE    ? 0 : (1UL << 63));
+    CSRW(CSR_MIDELEG, !MIDELEG ? 0 : -1);
+    CSRW(CSR_MVIEN,   !MVIEN   ? 0 : -1);
+    CSRW(CSR_HIDELEG, !HIDELEG ? 0 : -1);
+    CSRW(CSR_HVIEN,   !HVIEN   ? 0 : -1);
+
+    INFO("Check all xip, when")
+    INFO("  menvcfg=%#lx", CSRR(CSR_MENVCFG));
+    INFO("  mideleg=%#lx", CSRR(CSR_MIDELEG));
+    INFO("  mvien  =%#lx", CSRR(CSR_MVIEN));
+    INFO("  hideleg=%#lx", CSRR(CSR_HIDELEG));
+    INFO("  hvien  =%#lx", CSRR(CSR_HVIEN));
+    INFO("");
+
+    CSRW(mip, (uint64_t)-1);
+    INFO("  set mip all 1s, get %#lx", CSRR(mip));
+    CSRW(mip, 0);
+
+    CSRW(CSR_MVIP, (uint64_t)-1);
+    INFO("  set mvip all 1s, get %#lx", CSRR(CSR_MVIP));
+    CSRW(CSR_MVIP, 0);
+
+    CSRW(CSR_HIP, (uint64_t)-1);
+    INFO("  set hip all 1s, get %#lx", CSRR(CSR_HIP));
+    CSRW(CSR_HIP, 0);
+
+    CSRW(CSR_HVIP, (uint64_t)-1);
+    INFO("  set hvip all 1s, get %#lx", CSRR(CSR_HVIP));
+    CSRW(CSR_HVIP, 0);
+
+    CSRW(CSR_SIP, (uint64_t)-1);
+    INFO("  set sip all 1s, get %#lx", CSRR(CSR_SIP));
+    CSRW(CSR_SIP, 0);
+
+    CSRW(CSR_VSIP, (uint64_t)-1);
+    INFO("  set vsip all 1s, get %#lx", CSRR(CSR_VSIP));
+    CSRW(CSR_VSIP, 0);
+
+    return true;
+}
+
+bool check_xie_read(
+    int MIDELEG,
+    int MVIEN,
+    int HIDELEG,
+    int HVIEN
+) {
+    CSRW(CSR_MIDELEG, !MIDELEG ? 0 : -1);
+    CSRW(CSR_MVIEN,   !MVIEN   ? 0 : -1);
+    CSRW(CSR_HIDELEG, !HIDELEG ? 0 : -1);
+    CSRW(CSR_HVIEN,   !HVIEN   ? 0 : -1);
+
+    INFO("Check all xie, when")
+    INFO("  mideleg=%#lx", CSRR(CSR_MIDELEG));
+    INFO("  mvien  =%#lx", CSRR(CSR_MVIEN));
+    INFO("  hideleg=%#lx", CSRR(CSR_HIDELEG));
+    INFO("  hvien  =%#lx", CSRR(CSR_HVIEN));
+    INFO("");
+
+    CSRW(CSR_MIE, (uint64_t)-1);
+    INFO("  set mie all 1s, get %#lx", CSRR(CSR_MIE));
+    CSRW(CSR_MIE, 0);
+
+    CSRW(CSR_MVIEN, (uint64_t)-1);
+    INFO("  set mvien all 1s, get %#lx", CSRR(CSR_MVIEN));
+    CSRW(CSR_MVIEN, 0);
+
+    CSRW(CSR_HVIEN, (uint64_t)-1);
+    INFO("  set hvien all 1s, get %#lx", CSRR(CSR_HVIEN));
+    CSRW(CSR_HVIEN, 0);
+
+    CSRW(CSR_HIE, (uint64_t)-1);
+    INFO("  set hie all 1s, get %#lx", CSRR(CSR_HIE));
+    CSRW(CSR_HIE, 0);
+
+    CSRW(CSR_SIE, (uint64_t)-1);
+    INFO("  set sie all 1s, get %#lx", CSRR(CSR_SIE));
+    CSRW(CSR_SIE, 0);
+
+    CSRW(CSR_VSIE, (uint64_t)-1);
+    INFO("  set vsie all 1s, get %#lx", CSRR(CSR_VSIE));
+    CSRW(CSR_VSIE, 0);
+
+    return true;
 }
