@@ -192,6 +192,18 @@ static inline void wfi() {
     asm ("wfi" ::: "memory");
 }
 
+#define CBOCLEAN() \
+    asm volatile(".word 0x0010A00F\n\t" ::: "memory")   //cbo.clean(x1)
+
+#define CBOFLUSH() \
+    asm volatile(".word 0x0020A00F\n\t" ::: "memory")
+
+#define CBOINVAL() \
+    asm volatile(".word 0x0000A00F\n\t" ::: "memory")
+
+#define CBOZERO() \
+    asm volatile(".word 0x0040A00F\n\t" ::: "memory")
+
 #define LOAD_INSTRUCTION(name, instruction, type) \
     static inline type name(uintptr_t addr){ \
         type value; \
