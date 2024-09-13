@@ -50,6 +50,14 @@
 #define CSRC(csr, rs) \
     asm volatile("csrc  " CSR_STR(csr) ", %0\n\r" ::"rK"(rs) : "memory")
 
+#define OPCODE_MISC_MEM 0x0f
+#define FUNC3_CBO       0b010
+#define _STR(x) #x
+
+// I type: .insn i opcode, func3, rd, rs1, simm12
+#define INSN_I_TYPE_STR(opcode, func3, rd, rs1, simm12) \
+    ".insn i " _STR(opcode)"," _STR(func3)"," _STR(rd)"," _STR(rs1)"," _STR(simm12)
+
 static inline void sfence(){
     asm volatile ("sfence.vma \n\t");
 }
@@ -192,17 +200,34 @@ static inline void wfi() {
     asm ("wfi" ::: "memory");
 }
 
-#define CBOCLEAN() \
-    asm volatile(".word 0x0010A00F\n\t" ::: "memory")   //cbo.clean(x1)
 
-#define CBOFLUSH() \
-    asm volatile(".word 0x0020A00F\n\t" ::: "memory")
+static inline void cbo_clean(uintptr_t addr) {
+    asm volatile(
+        INSN_I_TYPE_STR(OPCODE_MISC_MEM, FUNC3_CBO, x0, %0, 0x001)
+        :: "r"(addr) : "memory"
+    );
+}
 
-#define CBOINVAL() \
-    asm volatile(".word 0x0000A00F\n\t" ::: "memory")
+static inline void cbo_flush(uintptr_t addr) {
+    asm volatile(
+        INSN_I_TYPE_STR(OPCODE_MISC_MEM, FUNC3_CBO, x0, %0, 0x002)
+        :: "r"(addr) : "memory"
+    );
+}
 
-#define CBOZERO() \
-    asm volatile(".word 0x0040A00F\n\t" ::: "memory")
+static inline void cbo_inval(uintptr_t addr) {
+    asm volatile(
+        INSN_I_TYPE_STR(OPCODE_MISC_MEM, FUNC3_CBO, x0, %0, 0x000)
+        :: "r"(addr) : "memory"
+    );
+}
+
+static inline void cbo_zero(uintptr_t addr) {
+    asm volatile(
+        INSN_I_TYPE_STR(OPCODE_MISC_MEM, FUNC3_CBO, x0, %0, 0x004)
+        :: "r"(addr) : "memory"
+    );
+}
 
 #define LOAD_INSTRUCTION(name, instruction, type) \
     static inline type name(uintptr_t addr){ \
