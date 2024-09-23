@@ -2,9 +2,13 @@
 
 //enum test_state {};
 
-extern test_func_t _test_table, _test_table_size;
-test_func_t* test_table = &_test_table;
-size_t test_table_size = (size_t) &_test_table_size;
+extern test_func_t _hyp_test_table, _hyp_test_table_size;
+test_func_t* hyp_test_table = &_hyp_test_table;
+size_t hyp_test_table_size = (size_t) &_hyp_test_table_size;
+
+extern test_func_t _non_hyp_test_table, _non_hyp_test_table_size;
+test_func_t* non_hyp_test_table = &_non_hyp_test_table;
+size_t non_hyp_test_table_size = (size_t) &_non_hyp_test_table_size;
 
 unsigned test_num = 0;
 unsigned curr_priv = PRIV_M;

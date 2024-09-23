@@ -24,13 +24,20 @@ SECTIONS {
 		*(.rodata)
 	}
 
-    .test_table :  {
-        _test_table = .;
-		*(.test_table)
-        _test_table_end = .;
+	.hyp_test_table :  {
+		_hyp_test_table = .;
+		*(.hyp_test_table)
+		_hyp_test_table_end = .;
 	}
-    _test_table_size = (_test_table_end - _test_table) / 8;
+	_hyp_test_table_size = (_hyp_test_table_end - _hyp_test_table) / 8;
 	
+	.non_hyp_test_table : {
+		_non_hyp_test_table = .;
+		*(.non_hyp_test_table)
+		_non_hyp_test_table_end = .;
+	}
+	_non_hyp_test_table_size = (_non_hyp_test_table_end - _non_hyp_test_table) / 8;
+
 	.data : {
 		*(.data)
 	}

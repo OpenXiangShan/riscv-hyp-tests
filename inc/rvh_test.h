@@ -104,8 +104,8 @@ extern struct exception {
 } excpt;
 
 typedef bool (*test_func_t)();
-extern test_func_t* test_table;
-extern size_t test_table_size;
+extern test_func_t* hyp_test_table;
+extern size_t hyp_test_table_size;
 
 #define TEST_START()\
     const char* __test_name = __func__;\
@@ -113,9 +113,14 @@ extern size_t test_table_size;
     if(LOG_LEVEL >= LOG_INFO) printf(CBLU "%-70s" CDFLT, __test_name);\
     if(LOG_LEVEL >= LOG_DETAIL) printf("\n");
 
-#define TEST_REGISTER(test)\
+#define TEST_REGISTER_HYP(test)\
     bool test();\
-    static test_func_t test ## func __attribute__((section(".test_table"), used)) = test;
+    static test_func_t test ## func __attribute__((section(".hyp_test_table"), used)) = test;
+
+#define TEST_REGISTER(test) \
+    bool test(); \
+    static test_func_t test ## func __attribute__((section(".test_non_hyp_table", used)) = test;
+    
 
 #define TEST_ASSERT(test, cond, ...) {\
     if(LOG_LEVEL >= LOG_DETAIL){\
