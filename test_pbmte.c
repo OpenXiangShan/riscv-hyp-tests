@@ -11,6 +11,12 @@ static inline void touchwrite(uintptr_t addr, uint64_t val){
   *((volatile uint64_t*) addr) = val;
 }
 
+uint64_t __attribute__((section(".nop_test"))) test(void){
+  for (int i = 0; i < 1024; i++ ){
+    asm volatile ("addi x0, x0, 0");
+  }
+  return 1;
+}
 
 bool test_pbmte() {
   TEST_START();
@@ -33,7 +39,7 @@ bool test_pbmte() {
   CSRS(medeleg, (1 << CAUSE_LGPF) | (1 << CAUSE_SGPF));
   CSRC(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS); 
+  goto_priv(PRIV_HS);
   CSRS(CSR_HEDELEG, 1 << CAUSE_LPF);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
@@ -124,6 +130,42 @@ bool test_pbmte_withH() {
   hfence_vvma();
   goto_priv(PRIV_VS);
   touchread(vs_page_base(VSRWXP_GURWXP));
+
+  TEST_END();
+}
+
+bool test_pbmt_PTEs() {
+  TEST_START();
+  CSRS(medeleg, 1 << CAUSE_LPF | 1 << CAUSE_LGPF | (1 << CAUSE_SGPF));
+
+  /**
+   * Setup hyp page_tables.
+   */
+  goto_priv(PRIV_HS);
+  CSRS(CSR_HEDELEG, 1 << CAUSE_LPF);
+  hspt_init();
+  hpt_init();
+
+  /**
+   * Setup guest page tables.
+   */
+  goto_priv(PRIV_VS);
+  vspt_init();
+
+  goto_priv(PRIV_M);
+  CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
+  hfence_gvma();
+  goto_priv(PRIV_HS);
+  CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
+  hfence_vvma();
+  goto_priv(PRIV_VS);
+
+  /**
+   * Execute the linked function located in the NC space to test whether it is inferred to execute in the NC space.
+   */
+  uint64_t (*test_nc)(void) =  (uint64_t (*)(void))vs_page_base(VSRWXP_GURWXP);
+  printf("\nNC_vaddr:%lx \t NC_paddr:%lx\n", vs_page_base(VSRWXP_GURWXP), phys_page_base(VSRWXP_GURWXP));
+  test_nc();
 
   TEST_END();
 }

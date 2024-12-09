@@ -6,11 +6,10 @@ ENTRY(_boot)
 
 STACK_SIZE = 1M;
 
-MEMORY {
-    RAM (rwx)    : ORIGIN = MEM_BASE, LENGTH = MEM_SIZE    
-}
 
 SECTIONS {
+
+	. = MEM_BASE;
 
 	.boot : {
 		*(.boot)
@@ -60,4 +59,10 @@ SECTIONS {
     . = ALIGN(16) + STACK_SIZE;
     __stack_top = .;
     _end = .;
+
+	. = 0x8806c000;
+	.nop_test : {
+		*(.nop_test)
+	}
+
 }
