@@ -14,7 +14,6 @@ static inline void touchwrite(uintptr_t addr, uint64_t val){
 
 bool test_pbmte() {
   TEST_START();
-  INFO("")
 
   /**
    * Setup hyp page_tables.
@@ -39,6 +38,7 @@ bool test_pbmte() {
   hfence_vvma();
   goto_priv(PRIV_VS);
 
+  printf("\n");
   INFO("test (menvcfg.pbmte, PBMT) = (0, 0)")
   touchread(vs_page_base(VSRWX_GURWX));
 
@@ -164,7 +164,6 @@ bool test_pbmt() {
 
 bool test_pbmt_simple() {
   TEST_START();
-  printf("\n");
   
   // Close all delegations of exceptions
   CSRW(CSR_MEDELEG, 0);
@@ -190,6 +189,7 @@ bool test_pbmt_simple() {
 
   uintptr_t vaddr = vs_page_base(VSRWXP_GURWXP);
   uint64_t val = 0xdeadbeef;
+  // printf("\n");
   // printf("vaddr = 0x%lx\n", vaddr);
   write64(vaddr, val);
   // printf("read = 0x%lx\n", read64(vaddr));
@@ -203,7 +203,6 @@ bool test_pbmt_simple() {
 
 bool test_pbmt_forward() {
   TEST_START();
-  printf("\n");
   
   // Close all delegations of exceptions
   CSRW(CSR_MEDELEG, 0);
@@ -246,17 +245,25 @@ bool test_pbmt_forward() {
     vals[i] = *(volatile uint64_t*) vaddrs[i];
   }
 
-  printf("vaddr, val\n");
-  for(int i = 1; i < 5; ++i) {
-    printf("%d: 0x%lx, 0x%lx\n", i, vaddrs[i], vals[i]);
-  }
-  
+  // printf("\n");
+  // printf("vaddr, val\n");
+  // for(int i = 1; i < 5; ++i) {
+  //   printf("%d: 0x%lx, 0x%lx\n", i, vaddrs[i], vals[i]);
+  // }
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("vals[1] should be 0xdeadbee.", vals[1]==0xdeadbee);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("vals[2] should be 0xdeadbe.", vals[2]==0xdeadbe);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("vals[3] should be 0xdeadb.", vals[3]==0xdeadb);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("vals[4] should be 0xdead.", vals[4]==0xdead);
+
   TEST_END();
 }
 
 bool test_pbmt_stld_violate() {
   TEST_START();
-  printf("\n");
   // Close all delegations of exceptions
   CSRW(CSR_MEDELEG, 0);
   CSRW(CSR_HEDELEG, 0);
@@ -319,15 +326,19 @@ bool test_pbmt_stld_violate() {
   val2 = *(uint64_t*) vaddr2;
   
   // Output
-  printf("%d: 0x%lx, 0x%lx\n", 1, vaddr1, val1);
-  printf("%d: 0x%lx, 0x%lx\n", 2, vaddr2, val2);
+  // printf("\n");
+  // printf("%d: 0x%lx, 0x%lx\n", 1, vaddr1, val1);
+  // printf("%d: 0x%lx, 0x%lx\n", 2, vaddr2, val2);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("There should be the same vaddr.", vaddr1==vaddr2);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("There should be the same data.", val1==val2);
   
   TEST_END();
 }
 
 bool test_pbmt_ldld_violate() {
   TEST_START();
-  printf("\n");
   // Close all delegations of exceptions
   CSRW(CSR_MEDELEG, 0);
   CSRW(CSR_HEDELEG, 0);
@@ -378,8 +389,13 @@ bool test_pbmt_ldld_violate() {
   val2 = *(uint64_t*) vaddr2;
 
   // Output
-  printf("%d: 0x%lx, 0x%lx\n", 1, vaddr1, val1);
-  printf("%d: 0x%lx, 0x%lx\n", 2, vaddr2, val2);
+  // printf("\n");
+  // printf("%d: 0x%lx, 0x%lx\n", 1, vaddr1, val1);
+  // printf("%d: 0x%lx, 0x%lx\n", 2, vaddr2, val2);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("There should be the same vaddr.", vaddr1==vaddr2);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("There should be the same data.", val1==val2);
 
   TEST_END();
 }
