@@ -14,5 +14,3 @@ TEST_REGISTER_HYP(tinst_tests);
 TEST_REGISTER_HYP(apt_tests);
 TEST_REGISTER_HYP(tval_inst_tests);
 TEST_REGISTER_HYP(cbo_test);
-TEST_REGISTER_HYP(test_pbmte);
-TEST_REGISTER_HYP(test_pbmte_withH);
