@@ -73,6 +73,7 @@ void setStats(int enable)
 void exit(int code)
 {
   nemu_trap(0);
+  while (1) ;
 }
 
 #undef putchar
