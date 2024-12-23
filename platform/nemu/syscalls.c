@@ -80,6 +80,7 @@ void exit(int code)
 int putchar(int ch)
 {
   uartlite_putchar(ch);
+  return ch;
 }
 
 static inline void printnum(void (*putch)(int, void**), void **putdat,
