@@ -13,7 +13,7 @@
 #define static_assert(cond) switch(0) { case 0: case !!(long)(cond): ; }
 #define nemu_trap(code) asm volatile("mv a0, %0; .word 0x0000006b" : :"r"(code))
 
-volatile uint8_t* uartlite = 0x40600000;
+volatile uint8_t* uartlite = (void *)0x40600000UL;
 
 #define UART_LITE_RX_FIFO    0x0
 #define UART_LITE_TX_FIFO    0x4
