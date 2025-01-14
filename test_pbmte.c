@@ -1,5 +1,7 @@
 #include <page_tables.h>
 #include <rvh_test.h>
+#define USE_CYCLE_COUNTER 1
+// #define USE_TIME_COUNTER 1
 
 static inline void touchread(uintptr_t addr){
   asm volatile("" ::: "memory");
@@ -9,6 +11,42 @@ static inline void touchread(uintptr_t addr){
 static inline void touchwrite(uintptr_t addr, uint64_t val){
   asm volatile("" ::: "memory");
   *((volatile uint64_t*) addr) = val;
+}
+
+static inline uint64_t myClock(){
+  uint64_t res = 0;
+#if USE_CYCLE_COUNTER
+  asm volatile(
+    "fence;"
+    "csrr %0, cycle;"
+    "fence;"
+    : "=r"(res) : :
+  );
+#elif USE_TIME_COUNTER
+  asm volatile(
+    "fence;"
+    "csrr %0, time;"
+    "fence;"
+    : "=r"(res) : :
+  );
+#endif
+  return res;
+}
+
+static inline uint64_t read4KBby4BAndPrint(uintptr_t addr){
+  printf("addr:0x%lx\n", addr);
+  volatile unsigned long res, start, end;
+  start = myClock();
+  uint64_t val;
+  for(int i = 0; i < 1000; i++){
+    // val = *(uint64_t*) addr;
+    // asm volatile("ld %0, 0(%1)" : "=r"(val) : "r"(addr) : );
+    read32(addr);
+    addr += 4;
+  }
+  end = myClock();
+  printf("start: %lu, end: %lu, ticks: %lu\n", start, end, res = (end - start));
+  return res;
 }
 
 
@@ -368,7 +406,7 @@ bool test_pbmt_ldld_violate() {
   uint64_t val1, val2;
   vaddr2 = vaddr + 8;
 
-  // stld violate
+  // ldld violate
   asm volatile(
     // *(uint64_t*) vaddr2 = val;
     "sd %3, 0(%2);"
@@ -389,13 +427,81 @@ bool test_pbmt_ldld_violate() {
   val2 = *(uint64_t*) vaddr2;
 
   // Output
-  // printf("\n");
-  // printf("%d: 0x%lx, 0x%lx\n", 1, vaddr1, val1);
-  // printf("%d: 0x%lx, 0x%lx\n", 2, vaddr2, val2);
+  printf("\n");
+  printf("%d: 0x%lx, 0x%lx\n", 1, vaddr1, val1);
+  printf("%d: 0x%lx, 0x%lx\n", 2, vaddr2, val2);
   TEST_SETUP_EXCEPT();
   TEST_ASSERT("There should be the same vaddr.", vaddr1==vaddr2);
   TEST_SETUP_EXCEPT();
   TEST_ASSERT("There should be the same data.", val1==val2);
 
+  TEST_END();
+}
+
+bool test_pbmt_perf(){
+  TEST_START();
+  // Close all delegations of exceptions
+  CSRW(CSR_MEDELEG, 0);
+  CSRW(CSR_HEDELEG, 0);
+
+  // Setup hyp page_tables.
+  goto_priv(PRIV_HS);
+  hspt_init();
+  hpt_init();
+
+  // Setup guest page tables.
+  goto_priv(PRIV_VS);
+  vspt_init();
+
+  // Set PBMTE
+  goto_priv(PRIV_M);
+  CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
+#if USE_CYCLE_COUNTER
+  CSRS(CSR_MCOUNTEREN, HCOUNTEREN_CY);
+  printf("before csrw\n");
+  CSRW(CSR_MCYCLE, 0x0);
+  printf("after csrw\n");
+#elif USE_TIME_COUNTER
+  CSRS(CSR_MCOUNTEREN, HCOUNTEREN_TM);
+#endif
+  hfence_gvma();
+  goto_priv(PRIV_HS);
+  CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
+#ifdef USE_CYCLE_COUNTER
+  CSRS(CSR_HCOUNTEREN, HCOUNTEREN_CY);
+#elif USE_TIME_COUNTER
+  CSRS(CSR_HCOUNTEREN, HCOUNTEREN_TM);
+#endif
+  hfence_vvma();
+  goto_priv(PRIV_VS);
+#ifdef USE_CYCLE_COUNTER
+  CSRW(sscratch, 1);
+#endif
+
+  uint64_t val;
+  unsigned long io_time, nc_time, nc_ot_time, pma_time;
+  printf("\nTEST: read 4 Bytes 1000 times\n");
+  
+  uintptr_t io_vaddr = vs_page_base(VSRWXP2_GURWXP2);
+  printf("\nSvpbmt IO test...\n");
+  io_time = read4KBby4BAndPrint(io_vaddr);
+
+  uintptr_t nc_vaddr = vs_page_base(VSRWXP_GURWXP);
+  printf("\nSvpbmt NC test...\n");
+  nc_time = read4KBby4BAndPrint(nc_vaddr);
+
+  CSRS(0x5C3, 1<<7);
+  printf("\nSvpbmt NC OUTSTANDING test...\n");
+  printf("smblockctl = 0x%lx\n", CSRR(0x5C3));
+  nc_ot_time = read4KBby4BAndPrint(nc_vaddr);
+  
+  uintptr_t pma_vaddr = vs_page_base(VSRWX_GURWX);
+  printf("\nSvpbmt PMA test...\n");
+  pma_time = read4KBby4BAndPrint(pma_vaddr);
+
+  bool time_order = io_time > nc_time && nc_time > nc_ot_time && nc_ot_time > pma_time;
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("Time order need to be 'IO > NC > NC OT > PMA'", time_order);
+  
   TEST_END();
 }

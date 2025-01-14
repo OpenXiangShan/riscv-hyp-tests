@@ -129,6 +129,7 @@ struct {
     [VSI_GURW]        =   {0,                       PTE_V | PTE_U | PTE_RW},
     [VSRWX_GURWXP]    =   {PTE_V | PTE_RWX, PTE_V | PTE_U | PTE_RWX | PTE_PBMT_1},
     [VSRWXP_GURWXP]   =   {PTE_V | PTE_RWX | PTE_PBMT_1 , PTE_V | PTE_U | PTE_RWX | PTE_PBMT_1},
+    [VSRWXP2_GURWXP2] =   {PTE_V | PTE_RWX | PTE_PBMT_2 , PTE_V | PTE_U | PTE_RWX | PTE_PBMT_2},
     [SCRATCHPAD]      =   {PTE_V | PTE_RWX,         PTE_V | PTE_U | PTE_RWX},           
     [SWITCH1]         =   {PTE_V | PTE_RWX,         PTE_V | PTE_U | PTE_RWX},      
     [SWITCH2]         =   {PTE_V | PTE_RWX,         PTE_V | PTE_U | PTE_RWX},      

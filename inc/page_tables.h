@@ -25,6 +25,7 @@
 #define PTE_ACCESS (1ULL << 6)
 #define PTE_DIRTY (1ULL << 7)
 #define PTE_PBMT_1 (1ULL << 61)
+#define PTE_PBMT_2 (2ULL << 61)
 
 #define PTE_V PTE_VALID
 #define PTE_AD (PTE_ACCESS | PTE_DIRTY)
@@ -158,6 +159,7 @@ enum test_page {
     VSI_GURW,
     VSRWX_GURWXP,
     VSRWXP_GURWXP,
+    VSRWXP2_GURWXP2,
     SCRATCHPAD,
     SWITCH1,
     SWITCH2,
