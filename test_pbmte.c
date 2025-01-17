@@ -3,6 +3,9 @@
 #define USE_CYCLE_COUNTER 1
 // #define USE_TIME_COUNTER 1
 
+#define PERF_4B 1
+// #define PERF_1B 1
+
 static inline void touchread(uintptr_t addr){
   asm volatile("" ::: "memory");
   volatile uint64_t x = *(volatile uint64_t *)addr;
@@ -38,12 +41,17 @@ static inline uint64_t read4KBby4BAndPrint(uintptr_t addr){
   volatile unsigned long res, start, end;
   start = myClock();
   uint64_t val;
+#ifdef PERF_4B
   for(int i = 0; i < 1000; i++){
-    // val = *(uint64_t*) addr;
-    // asm volatile("ld %0, 0(%1)" : "=r"(val) : "r"(addr) : );
     read32(addr);
     addr += 4;
   }
+#elif PERF_1B
+  for(int i = 0; i < 4096; i++){
+    read8(addr);
+    addr += 1;
+  }
+#endif
   end = myClock();
   printf("start: %lu, end: %lu, ticks: %lu\n", start, end, res = (end - start));
   return res;
@@ -458,9 +466,7 @@ bool test_pbmt_perf(){
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
 #if USE_CYCLE_COUNTER
   CSRS(CSR_MCOUNTEREN, HCOUNTEREN_CY);
-  printf("before csrw\n");
   CSRW(CSR_MCYCLE, 0x0);
-  printf("after csrw\n");
 #elif USE_TIME_COUNTER
   CSRS(CSR_MCOUNTEREN, HCOUNTEREN_TM);
 #endif
@@ -480,8 +486,12 @@ bool test_pbmt_perf(){
 
   uint64_t val;
   unsigned long io_time, nc_time, nc_ot_time, pma_time;
+#ifdef PERF_4B
   printf("\nTEST: read 4 Bytes 1000 times\n");
-  
+#elif PERF_1B
+  printf("\nTEST: read 1 Byte 4096 times\n");
+#endif
+
   uintptr_t io_vaddr = vs_page_base(VSRWXP2_GURWXP2);
   printf("\nSvpbmt IO test...\n");
   io_time = read4KBby4BAndPrint(io_vaddr);
