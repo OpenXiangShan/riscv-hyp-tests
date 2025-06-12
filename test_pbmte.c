@@ -78,7 +78,6 @@ bool test_pbmte() {
   CSRS(medeleg, (1 << CAUSE_LGPF) | (1 << CAUSE_SGPF));
   CSRC(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS); 
   CSRS(CSR_HEDELEG, 1 << CAUSE_LPF);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
@@ -91,7 +90,7 @@ bool test_pbmte() {
   INFO("test (menvcfg.pbmte, PBMT) = (0, 1)");
   TEST_SETUP_EXCEPT();
   touchread(vs_page_base(VSRWX_GURWXP));
-  TEST_ASSERT("store page fault triggered", excpt.triggered == true && excpt.cause == CAUSE_LGPF)
+  TEST_ASSERT("load page fault triggered", excpt.triggered == true && excpt.cause == CAUSE_LGPF)
 
   goto_priv(PRIV_M);
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
@@ -153,7 +152,6 @@ bool test_pbmte_withH() {
   goto_priv(PRIV_M);
   CSRC(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
   goto_priv(PRIV_VS);
@@ -165,7 +163,6 @@ bool test_pbmte_withH() {
   goto_priv(PRIV_M);
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
   goto_priv(PRIV_VS);
@@ -198,7 +195,6 @@ bool test_pbmt() {
   goto_priv(PRIV_M);
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
   goto_priv(PRIV_VS);
@@ -228,7 +224,6 @@ bool test_pbmt_simple() {
   goto_priv(PRIV_M);
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
   goto_priv(PRIV_VS);
@@ -267,7 +262,6 @@ bool test_pbmt_forward() {
   goto_priv(PRIV_M);
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
   goto_priv(PRIV_VS);
@@ -327,7 +321,6 @@ bool test_pbmt_stld_violate() {
   goto_priv(PRIV_M);
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
   goto_priv(PRIV_VS);
@@ -402,7 +395,6 @@ bool test_pbmt_ldld_violate() {
   goto_priv(PRIV_M);
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
   hfence_gvma();
-  goto_priv(PRIV_HS);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
   hfence_vvma();
   goto_priv(PRIV_VS);
@@ -435,9 +427,9 @@ bool test_pbmt_ldld_violate() {
   val2 = *(uint64_t*) vaddr2;
 
   // Output
-  printf("\n");
-  printf("%d: 0x%lx, 0x%lx\n", 1, vaddr1, val1);
-  printf("%d: 0x%lx, 0x%lx\n", 2, vaddr2, val2);
+  // printf("\n");
+  // printf("%d: 0x%lx, 0x%lx\n", 1, vaddr1, val1);
+  // printf("%d: 0x%lx, 0x%lx\n", 2, vaddr2, val2);
   TEST_SETUP_EXCEPT();
   TEST_ASSERT("There should be the same vaddr.", vaddr1==vaddr2);
   TEST_SETUP_EXCEPT();
@@ -471,7 +463,7 @@ bool test_pbmt_perf(){
   CSRS(CSR_MCOUNTEREN, HCOUNTEREN_TM);
 #endif
   hfence_gvma();
-  goto_priv(PRIV_HS);
+  // goto_priv(PRIV_HS);
   CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
 #ifdef USE_CYCLE_COUNTER
   CSRS(CSR_HCOUNTEREN, HCOUNTEREN_CY);
@@ -500,9 +492,11 @@ bool test_pbmt_perf(){
   printf("\nSvpbmt NC test...\n");
   nc_time = read4KBby4BAndPrint(nc_vaddr);
 
+  goto_priv(PRIV_M);
   CSRS(0x5C3, 1<<7);
   printf("\nSvpbmt NC OUTSTANDING test...\n");
   printf("smblockctl = 0x%lx\n", CSRR(0x5C3));
+  goto_priv(PRIV_VS);
   nc_ot_time = read4KBby4BAndPrint(nc_vaddr);
   
   uintptr_t pma_vaddr = vs_page_base(VSRWX_GURWX);
