@@ -5,6 +5,10 @@
 
 #define PERF_4B 1
 // #define PERF_1B 1
+#define ReadReg32(addr) (*(volatile uint32_t *)(addr))
+#define WriteReg32(addr, data) (ReadReg32(addr) = (data))
+#define ClearBit32(addr, width, offset) ReadReg32(addr) & ~(((1 << (width))-1) << (offset))
+#define WriteBit32(addr, data, width, offset) (ReadReg32(addr) = (ClearBit32(addr, width, offset) | ((data) << (offset))))
 
 static inline void touchread(uintptr_t addr){
   asm volatile("" ::: "memory");
@@ -434,6 +438,78 @@ bool test_pbmt_ldld_violate() {
   TEST_ASSERT("There should be the same vaddr.", vaddr1==vaddr2);
   TEST_SETUP_EXCEPT();
   TEST_ASSERT("There should be the same data.", val1==val2);
+
+  TEST_END();
+}
+
+static inline bool ByteWriteRead(uintptr_t vaddr){
+  bool check = true;
+  uint64_t st_data = 0xdeadbeef;
+  WriteBit32(vaddr, st_data, 32, 0);
+  uint64_t ld_data = ReadReg32(vaddr);
+  check = check && (ld_data == st_data);
+  printf("4-byte wr: vaddr = 0x%lx, st_data = 0x%lx, ld_data = 0x%lx\n", vaddr, st_data, ld_data);
+
+  st_data = 0xdeaddcba;
+  WriteBit32(vaddr, 0xa, 4, 0);
+  WriteBit32(vaddr, 0xb, 4, 4);
+  WriteBit32(vaddr, 0xc, 4, 8);
+  WriteBit32(vaddr, 0xd, 4, 12);
+  ld_data = ReadReg32(vaddr);
+  check = check && (ld_data == st_data);
+  printf("1-byte wr: vaddr = 0x%lx, correct = 0x%lx, ld_data = 0x%lx\n", vaddr, st_data, ld_data);
+
+  for(unsigned int i = 0; i < 60; i = i + 4) {
+    WriteReg32(vaddr + i, 0xc000 + i);
+  }
+  
+  for(unsigned int i = 0; i < 60; i = i + 4) {
+    ld_data = ReadReg32(vaddr + i);
+    check = check && (ld_data == (0xc000 + i));
+    // printf("vaddr + %d = 0x%lx\n", i, ld_data);
+  }
+
+  return check;
+}
+
+bool test_pbmt_byte_write_read(){
+  TEST_START();
+  // Close all delegations of exceptions
+  CSRW(CSR_MEDELEG, 0);
+  CSRW(CSR_HEDELEG, 0);
+
+  // Setup hyp page_tables.
+  goto_priv(PRIV_HS);
+  hspt_init();
+  hpt_init();
+
+  // Setup guest page tables.
+  goto_priv(PRIV_VS);
+  vspt_init();
+
+  // Set PBMTE
+  goto_priv(PRIV_M);
+  CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
+  hfence_gvma();
+  CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
+  hfence_vvma();
+  goto_priv(PRIV_VS);
+
+  bool check;
+  uintptr_t nc_vaddr = vs_page_base(VSRWXP_GURWXP);
+  printf("\nSvpbmt NC test...\n");
+  check = ByteWriteRead(nc_vaddr);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("Something is wrong.", check);
+
+  goto_priv(PRIV_M);
+  CSRS(0x5C3, 1<<7);
+  printf("\nSvpbmt NC OUTSTANDING test...\n");
+  printf("smblockctl = 0x%lx\n", CSRR(0x5C3));
+  goto_priv(PRIV_VS);
+  check = ByteWriteRead(nc_vaddr);
+  TEST_SETUP_EXCEPT();
+  TEST_ASSERT("Something is wrong.", check);
 
   TEST_END();
 }
