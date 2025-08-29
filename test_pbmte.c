@@ -7,7 +7,7 @@
 // #define PERF_1B 1
 #define ReadReg32(addr) (*(volatile uint32_t *)(addr))
 #define WriteReg32(addr, data) (ReadReg32(addr) = (data))
-#define ClearBit32(addr, width, offset) ReadReg32(addr) & ~(((1 << (width))-1) << (offset))
+#define ClearBit32(addr, width, offset) ReadReg32(addr) & ~(((1UL << (width))-1) << (offset))
 #define WriteBit32(addr, data, width, offset) (ReadReg32(addr) = (ClearBit32(addr, width, offset) | ((data) << (offset))))
 
 static inline void touchread(uintptr_t addr){
