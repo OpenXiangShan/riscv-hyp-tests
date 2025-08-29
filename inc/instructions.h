@@ -50,6 +50,41 @@
 #define CSRC(csr, rs) \
     asm volatile("csrc  " CSR_STR(csr) ", %0\n\r" ::"rK"(rs) : "memory")
 
+#define RDCYCLE()                                     \
+    ({                                                \
+        uint64_t _temp;                               \
+        asm volatile("rdcycle  %0\n\r"                \
+                     : "=r"(_temp)::"memory");        \
+        _temp;                                        \
+    })
+
+#define RDTIME()                                      \
+    ({                                                \
+        uint64_t _temp;                               \
+        asm volatile("rdtime  %0\n\r"                 \
+                     : "=r"(_temp)::"memory");        \
+        _temp;                                        \
+    })
+
+#define RDINSTRET()                                   \
+    ({                                                \
+        uint64_t _temp;                               \
+        asm volatile("rdinstret  %0\n\r"              \
+                     : "=r"(_temp)::"memory");        \
+        _temp;                                        \
+    })
+
+#define GET_PC()                                      \
+    ({                                                \
+        uint64_t _temp;                               \
+        asm volatile(                                 \
+            "auipc %0, 0\n\t"                         \
+            "addi  %0, %0, 0\n\t"                     \
+            : "=r"(_temp)                             \
+            :: "memory");                             \
+        _temp;                                        \
+    })
+
 #define OPCODE_MISC_MEM 0x0f
 #define FUNC3_CBO       0b010
 #define _STR(x) #x
