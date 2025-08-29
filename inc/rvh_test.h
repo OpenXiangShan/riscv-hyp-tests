@@ -6,7 +6,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#define DECLARE_INSN(NAME, MATCH, MASK) \
+    static inline bool INS_MATCH_ ## NAME(uint32_t ins) { \
+        return ((ins & MASK) == MATCH); \
+    }
 #include <encoding.h>
+
 #include <csrs.h>
 #include <instructions.h>
 #include <platform.h>
