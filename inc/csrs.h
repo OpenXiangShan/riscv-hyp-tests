@@ -26,13 +26,49 @@
 #define HGATP_VMID_LEN (7)
 #endif
 
+/* mstatus csr */
+#define MSTATUS_SIE_OFF     (1)
+#define MSTATUS_SIE         (1ULL << MSTATUS_SIE_OFF)
+#define MSTATUS_MIE_OFF     (3)
+#define MSTATUS_MIE         (1ULL << MSTATUS_MIE_OFF)
+#define MSTATUS_SPIE_OFF    (5)
+#define MSTATUS_SPIE        (1ULL << MSTATUS_MPIE_OFF)
+#define MSTATUS_UBE_OFF     (6)
+#define MSTATUS_UBE         (1ULL << MSTATUS_UBE_OFF)
+#define MSTATUS_MPIE_OFF    (7)
+#define MSTATUS_MPIE        (1ULL << MSTATUS_MPIE_OFF)
+#define MSTATUS_SPP_OFF     (8)
+#define MSTATUS_SPP         (1ULL << MSTATUS_SPP_OFF)
 
 #define MSTATUS_MPRV_OFF    (17)
-#define MSTATUS_MPRV    (1ULL << MSTATUS_MPRV_OFF)
-#define MSTATUS_TW_OFF  (21)
-#define MSTATUS_TW   (1ULL << MSTATUS_TW_OFF)
-#define MSTATUS_GVA_OFF    (38)
-#define MSTATUS_GVA    (1ULL << MSTATUS_GVA_OFF)
+#define MSTATUS_MPRV        (1ULL << MSTATUS_MPRV_OFF)
+#define MSTATUS_SUM_OFF     (18)
+#define MSTATUS_SUM         (1ULL << MSTATUS_SUM_OFF)
+#define MSTATUS_MXR_OFF     (19)
+#define MSTATUS_MXR         (1ULL << MSTATUS_MXR_OFF)
+#define MSTATUS_TVM_OFF     (20)
+#define MSTATUS_TVM         (1ULL << MSTATUS_TVM_OFF)
+#define MSTATUS_TW_OFF      (21)
+#define MSTATUS_TW          (1ULL << MSTATUS_TW_OFF)
+#define MSTATUS_TSR_OFF     (22)
+#define MSTATUS_TSR         (1ULL << MSTATUS_TSR_OFF)
+#define MSTATUS_SPELP_OFF   (23)
+#define MSTATUS_SPELP       (1ULL << MSTATUS_SPELP_OFF)
+#define MSTATUS_SDT_OFF     (24)
+#define MSTATUS_SDT         (1ULL << MSTATUS_SDT_OFF)
+
+#define MSTATUS_SBE_OFF     (36)
+#define MSTATUS_SBE         (1ULL << MSTATUS_SBE_OFF)
+#define MSTATUS_MBE_OFF     (37)
+#define MSTATUS_MBE         (1ULL << MSTATUS_MBE_OFF)
+#define MSTATUS_GVA_OFF     (38)
+#define MSTATUS_GVA         (1ULL << MSTATUS_GVA_OFF)
+#define MSTATUS_MPV_OFF     (39)
+#define MSTATUS_MPV         (1ULL << MSTATUS_MPV_OFF)
+#define MSTATUS_MPELP_OFF   (41)
+#define MSTATUS_MPELP       (1ULL << MSTATUS_MPELP_OFF)
+#define MSTATUS_MDT_OFF     (42)
+#define MSTATUS_MDT         (1ULL << MSTATUS_MDT_OFF)
 
 #define SATP_MODE_BARE (0ULL << SATP_MODE_OFF)
 #define SATP_MODE_32 (1ULL << SATP_MODE_OFF)
@@ -210,5 +246,36 @@
 #define SENVCFG_CBIE  MENVCFG_CBIE
 #define SENVCFG_LPE   MENVCFG_LPE
 #define SENVCFG_FIOM  MENVCFG_FIOM
+
+/* mstateen0 */
+#define MSTATEEN0_C       (1ULL << 0)
+#define MSTATEEN0_FCSR    (1ULL << 1)
+#define MSTATEEN0_JVT     (1ULL << 2)
+#define MSTATEEN0_CTR     (1ULL << 54)
+#define MSTATEEN0_SRMCFG  (1ULL << 55)
+#define MSTATEEN0_P1P13   (1ULL << 56)
+#define MSTATEEN0_CONTEXT (1ULL << 57)
+#define MSTATEEN0_IMSIC   (1ULL << 58)
+#define MSTATEEN0_AIA     (1ULL << 59)
+#define MSTATEEN0_CSRIND  (1ULL << 60)
+#define MSTATEEN0_ENVCFG  (1ULL << 62)
+#define MSTATEEN0_SE0     (1ULL << 63)
+
+/* hstateen0 */
+#define HSTATEEN0_C       MSTATEEN0_C
+#define HSTATEEN0_FCSR    MSTATEEN0_FCSR
+#define HSTATEEN0_JVT     MSTATEEN0_JVT
+#define HSTATEEN0_CTR     MSTATEEN0_CTR
+#define HSTATEEN0_CONTEXT MSTATEEN0_CONTEXT
+#define HSTATEEN0_IMSIC   MSTATEEN0_IMSIC
+#define HSTATEEN0_AIA     MSTATEEN0_AIA
+#define HSTATEEN0_CSRIND  MSTATEEN0_CSRIND
+#define HSTATEEN0_ENVCFG  MSTATEEN0_ENVCFG
+#define HSTATEEN0_SE0     MSTATEEN0_SE0
+
+/* sstateen0 */
+#define SSTATEEN0_C       MSTATEEN0_C
+#define SSTATEEN0_FCSR    MSTATEEN0_FCSR
+#define SSTATEEN0_JVT     MSTATEEN0_JVT
 
 #endif /* __ARCH_CSRS_H__ */
