@@ -47,7 +47,7 @@ bool check_xie_regs() {
     CSRW(CSR_MIDELEG, (uint64_t)0);
     VERBOSE("setting all in mvien\n");
     CSRW(CSR_MVIEN, (uint64_t)-1);
-    check_csr_rd("mvien", CSR_MVIEN, 0xffffffffffffe202);
+    check_csr_rd("mvien", CSR_MVIEN, 0xffffffffffffc202);
     VERBOSE("setting all in mie\n");
     CSRW(CSR_MIE, (uint64_t)-1);
     check_csr_rd("hie", CSR_HIE, 0x1444);
@@ -56,19 +56,19 @@ bool check_xie_regs() {
 
     VERBOSE("setting all in sie\n");
     CSRW(CSR_SIE, (uint64_t)-1);
-    check_csr_rd("sie", CSR_SIE, 0xffffffffffffe202);
-    check_csr_rd("vsie", CSR_VSIE, 0x2222);
+    check_csr_rd("sie", CSR_SIE, 0xffffffffffffc202);
+    check_csr_rd("vsie", CSR_VSIE, 0x222);
     goto_priv(PRIV_VS);
-    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x2222);
+    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x222);
     goto_priv(PRIV_M);
 
     VERBOSE("clearing all in mie\n");
     CSRW(CSR_MIE, (uint64_t)0);
     check_csr_rd("hie", CSR_HIE, 0x0);
-    check_csr_rd("sie", CSR_SIE, 0xffffffffffffe202);
-    check_csr_rd("vsie", CSR_VSIE, 0x2000);
+    check_csr_rd("sie", CSR_SIE, 0xffffffffffffc202);
+    check_csr_rd("vsie", CSR_VSIE, 0x0);
     goto_priv(PRIV_VS);
-    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x2000);
+    check_csr_rd("sie (vs perspective)", CSR_SIE, 0x0);
     goto_priv(PRIV_M);
 
     VERBOSE("clearing all in sie\n");
@@ -83,7 +83,7 @@ bool check_xie_regs() {
     CSRW(CSR_HIDELEG, (uint64_t)0);
     VERBOSE("setting all in hvien");
     CSRW(CSR_HVIEN, (uint64_t)-1);
-    check_csr_wrrd("vsie", CSR_VSIE, (uint64_t)-1, 0xffffffffffffe000);
+    check_csr_wrrd("vsie", CSR_VSIE, (uint64_t)-1, 0xffffffffffffc000);
 
     TEST_END();
 }
@@ -109,17 +109,17 @@ bool check_xip_regs(){
     CSRW(mideleg, (uint64_t)-1);
     VERBOSE("setting mideleg and hideleg\n");
     CSRW(CSR_HIDELEG, (uint64_t)-1);
-    check_csr_wrrd("vsip", CSR_VSIP, (uint64_t) -1, 0x2);
-    check_csr_wrrd("vsie", CSR_VSIE, (uint64_t) -1, 0x222);
+    check_csr_wrrd("vsip", CSR_VSIP, (uint64_t) -1, 0xffffffffffffe002);
+    check_csr_wrrd("vsie", CSR_VSIE, (uint64_t) -1, 0xffffffffffffe222);
 
     VERBOSE("setting all in mip\n");
     CSRW(mip, (uint64_t)-1);
     check_csr_rd("hip", CSR_HIP, 0x4);
-    check_csr_rd("sip", sip, 0x222);
+    check_csr_rd("sip", sip, 0x2002);
     // check_csr_rd_mask("mip", mip, 0x226, mtime_mask); // only test when nemu don't use difftest because spike, as ref, shut up time interrupt
-    check_csr_rd("vsip", CSR_VSIP, 0x2);
+    check_csr_rd("vsip", CSR_VSIP, 0x2002);
     goto_priv(PRIV_VS);
-    check_csr_rd("sip (vs perspective)", sip, 0x2);
+    check_csr_rd("sip (vs perspective)", sip, 0x2002);
     goto_priv(PRIV_M);
 
     VERBOSE("clearing all in mip\n");
@@ -134,13 +134,13 @@ bool check_xip_regs(){
 
     VERBOSE("setting all in hvip\n");
     CSRW(CSR_HVIP, (uint64_t)-1);
-    check_csr_rd("hvip", CSR_HVIP, 0x444);
+    check_csr_rd("hvip", CSR_HVIP, 0xffffffffffffc444);
     check_csr_rd("hip", CSR_HIP, 0x444);
     check_csr_rd("sip", sip, 0x0);
     // check_csr_rd_mask("mip", mip, 0x444, mtime_mask);
-    check_csr_rd("vsip", CSR_VSIP, 0x222);
+    check_csr_rd("vsip", CSR_VSIP, 0xffffffffffffc222);
     goto_priv(PRIV_VS);
-    check_csr_rd("sip (vs perspective)", sip, 0x222);
+    check_csr_rd("sip (vs perspective)", sip, 0xffffffffffffc222);
     goto_priv(PRIV_M);
 
     VERBOSE("clearing all in hvip\n");
