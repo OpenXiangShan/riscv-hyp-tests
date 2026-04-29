@@ -3,8 +3,8 @@
 #define USE_CYCLE_COUNTER 1
 // #define USE_TIME_COUNTER 1
 
-#define PERF_4B 1
-// #define PERF_1B 1
+#define PERF_GRANULARITY 4
+#define PERF_TIMES (4096/(PERF_GRANULARITY))
 #define ReadReg32(addr) (*(volatile uint32_t *)(addr))
 #define WriteReg32(addr, data) (ReadReg32(addr) = (data))
 #define ClearBit32(addr, width, offset) ReadReg32(addr) & ~(((1UL << (width))-1) << (offset))
@@ -40,22 +40,23 @@ static inline uint64_t myClock(){
   return res;
 }
 
-static inline uint64_t read4KBby4BAndPrint(uintptr_t addr){
+static inline uint64_t read4KB(uintptr_t addr){
   printf("addr:0x%lx\n", addr);
   volatile unsigned long res, start, end;
   start = myClock();
   uint64_t val;
-#ifdef PERF_4B
-  for(int i = 0; i < 1000; i++){
+  for(int i = 0; i < PERF_TIMES; i++){
+#if PERF_GRANULARITY == 8
+    read64(addr);
+#elif PERF_GRANULARITY == 4
     read32(addr);
-    addr += 4;
-  }
-#elif PERF_1B
-  for(int i = 0; i < 4096; i++){
+#elif PERF_GRANULARITY == 2
+    read16(addr);
+#elif PERF_GRANULARITY == 1
     read8(addr);
-    addr += 1;
-  }
 #endif
+    addr += PERF_GRANULARITY;
+  }
   end = myClock();
   printf("start: %lu, end: %lu, ticks: %lu\n", start, end, res = (end - start));
   return res;
@@ -503,9 +504,9 @@ bool test_pbmt_byte_write_read(){
   TEST_ASSERT("Something is wrong.", check);
 
   goto_priv(PRIV_M);
-  CSRS(0x5C3, 1<<7);
+  CSRS(CSR_SMBLOCKCTL, SMBLOCKCTL_OUTSTANDING);
   printf("\nSvpbmt NC OUTSTANDING test...\n");
-  printf("smblockctl = 0x%lx\n", CSRR(0x5C3));
+  printf("smblockctl = 0x%lx\n", CSRR(CSR_SMBLOCKCTL));
   goto_priv(PRIV_VS);
   check = ByteWriteRead(nc_vaddr);
   TEST_SETUP_EXCEPT();
@@ -534,7 +535,6 @@ bool test_pbmt_perf(){
   CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
 #if USE_CYCLE_COUNTER
   CSRS(CSR_MCOUNTEREN, HCOUNTEREN_CY);
-  CSRW(CSR_MCYCLE, 0x0);
 #elif USE_TIME_COUNTER
   CSRS(CSR_MCOUNTEREN, HCOUNTEREN_TM);
 #endif
@@ -554,30 +554,26 @@ bool test_pbmt_perf(){
 
   uint64_t val;
   unsigned long io_time, nc_time, nc_ot_time, pma_time;
-#ifdef PERF_4B
-  printf("\nTEST: read 4 Bytes 1000 times\n");
-#elif PERF_1B
-  printf("\nTEST: read 1 Byte 4096 times\n");
-#endif
+  printf("\nTEST: read %d times per %d bytes\n", PERF_TIMES, PERF_GRANULARITY);
 
   uintptr_t io_vaddr = vs_page_base(VSRWXP2_GURWXP2);
   printf("\nSvpbmt IO test...\n");
-  io_time = read4KBby4BAndPrint(io_vaddr);
+  io_time = read4KB(io_vaddr);
 
   uintptr_t nc_vaddr = vs_page_base(VSRWXP_GURWXP);
   printf("\nSvpbmt NC test...\n");
-  nc_time = read4KBby4BAndPrint(nc_vaddr);
+  nc_time = read4KB(nc_vaddr);
 
   goto_priv(PRIV_M);
-  CSRS(0x5C3, 1<<7);
+  CSRS(CSR_SMBLOCKCTL, SMBLOCKCTL_OUTSTANDING);
   printf("\nSvpbmt NC OUTSTANDING test...\n");
-  printf("smblockctl = 0x%lx\n", CSRR(0x5C3));
+  printf("smblockctl = 0x%lx\n", CSRR(CSR_SMBLOCKCTL));
   goto_priv(PRIV_VS);
-  nc_ot_time = read4KBby4BAndPrint(nc_vaddr);
+  nc_ot_time = read4KB(nc_vaddr);
   
   uintptr_t pma_vaddr = vs_page_base(VSRWX_GURWX);
   printf("\nSvpbmt PMA test...\n");
-  pma_time = read4KBby4BAndPrint(pma_vaddr);
+  pma_time = read4KB(pma_vaddr);
 
   bool time_order = io_time > nc_time && nc_time > nc_ot_time && nc_ot_time > pma_time;
   TEST_SETUP_EXCEPT();

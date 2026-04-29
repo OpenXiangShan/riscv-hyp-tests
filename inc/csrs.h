@@ -278,4 +278,8 @@
 #define SSTATEEN0_FCSR    MSTATEEN0_FCSR
 #define SSTATEEN0_JVT     MSTATEEN0_JVT
 
+/* custom CSR */
+#define CSR_SMBLOCKCTL 0x5C3
+#define SMBLOCKCTL_OUTSTANDING (1UL << 7)
+
 #endif /* __ARCH_CSRS_H__ */
