@@ -352,3 +352,69 @@ void hpt_switch(){
     hpt[2][SWITCH1] = hpt[2][SWITCH2];
     hpt[2][SWITCH2] = temp;
 }
+
+bool remap_test_page_window(unsigned int start_slot, unsigned int page_count,
+                            enum test_page tp, uintptr_t phys_base){
+    if(tp >= TEST_PAGE_MAX){
+        return false;
+    }
+
+    if(start_slot >= TEST_PAGE_MAX || page_count == 0 ||
+       page_count > (TEST_PAGE_MAX - start_slot)){
+        return false;
+    }
+
+    if((phys_base & (PAGE_SIZE - 1)) != 0){
+        return false;
+    }
+
+    if((test_page_perm_table[tp].vs & PTE_V) == 0 ||
+       (test_page_perm_table[tp].h & PTE_V) == 0){
+        return false;
+    }
+
+    uintptr_t guest_addr = TEST_VPAGE_BASE + ((uintptr_t)start_slot * PAGE_SIZE);
+    uintptr_t host_addr = phys_base;
+    for(unsigned int index = 0; index < page_count; index++){
+        unsigned int slot = start_slot + index;
+        vspt[3][slot] = (guest_addr >> 2) | PTE_AD | test_page_perm_table[tp].vs;
+        hpt[2][slot] = (host_addr >> 2) | PTE_AD | test_page_perm_table[tp].h;
+        guest_addr += PAGE_SIZE;
+        host_addr += PAGE_SIZE;
+    }
+
+    return true;
+}
+
+bool remap_direct_identity_range(enum test_page tp, uintptr_t start_addr,
+                                 uintptr_t end_addr){
+    if(tp >= TEST_PAGE_MAX){
+        return false;
+    }
+
+    if(start_addr >= end_addr ||
+       (start_addr & (PAGE_SIZE - 1)) != 0 ||
+       (end_addr & (PAGE_SIZE - 1)) != 0){
+        return false;
+    }
+
+    if((test_page_perm_table[tp].vs & PTE_V) == 0 ||
+       (test_page_perm_table[tp].h & PTE_V) == 0){
+        return false;
+    }
+
+    uintptr_t first = start_addr / SUPERPAGE_SIZE(0);
+    uintptr_t last = (end_addr - 1) / SUPERPAGE_SIZE(0);
+
+    if(last >= 4){
+        return false;
+    }
+
+    for(uintptr_t index = first; index <= last; index++){
+        uintptr_t base = index * SUPERPAGE_SIZE(0);
+        vspt[0][index] = (base >> 2) | PTE_AD | test_page_perm_table[tp].vs;
+        hpt_root[index] = (base >> 2) | PTE_AD | test_page_perm_table[tp].h;
+    }
+
+    return true;
+}

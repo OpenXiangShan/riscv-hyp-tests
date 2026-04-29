@@ -208,5 +208,8 @@ void hpt_init();
 void hspt_switch();
 void vspt_switch();
 void hpt_switch();
-
+bool remap_test_page_window(unsigned int start_slot, unsigned int page_count,
+                            enum test_page tp, uintptr_t phys_base);
+bool remap_direct_identity_range(enum test_page tp, uintptr_t start_addr,
+                                 uintptr_t end_addr);
 #endif /* PAGE_TABLES_H */

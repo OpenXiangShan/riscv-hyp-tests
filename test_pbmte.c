@@ -581,3 +581,71 @@ bool test_pbmt_perf(){
   
   TEST_END();
 }
+
+#define PMBT_RANGE_START 0x37f00000UL
+#define PMBT_RANGE_END 0x37f02000UL // 0x38000000UL // 0x37f02000UL for small test
+// #define PMBT_TEST_PAGE_TYPE VSRWXP2_GURWXP2 // IO
+#define PMBT_TEST_PAGE_TYPE VSRWXP_GURWXP // NC
+bool test_uncache_write() {
+  TEST_START();
+  printf("\n");
+
+  const uintptr_t range_size = PMBT_RANGE_END - PMBT_RANGE_START;
+  const unsigned int page_count = range_size / PAGE_SIZE;
+  TEST_ASSERT("PBMT range must be page aligned and 8-byte aligned",
+              ((PMBT_RANGE_START | PMBT_RANGE_END | range_size) & (PAGE_SIZE - 1)) == 0 &&
+              (range_size % sizeof(uint64_t)) == 0);
+  TEST_ASSERT("PBMT range must be non-empty", page_count > 0);
+
+  CSRW(CSR_MEDELEG, 0);
+  CSRW(CSR_HEDELEG, 0);
+
+  goto_priv(PRIV_HS);
+  hspt_init();
+  hpt_init();
+
+  goto_priv(PRIV_VS);
+  vspt_init();
+
+  TEST_ASSERT("remap direct-map PBMT range", remap_direct_identity_range(
+              PMBT_TEST_PAGE_TYPE, PMBT_RANGE_START, PMBT_RANGE_END));
+
+  goto_priv(PRIV_M);
+  CSRS(CSR_MENVCFG, MENVCFG_PBMTE);
+  printf("Enable PBMT\n");
+  CSRS(CSR_SMBLOCKCTL, SMBLOCKCTL_OUTSTANDING);
+  printf("Enable Outstanding\n");
+#if USE_CYCLE_COUNTER
+  CSRS(CSR_MCOUNTEREN, HCOUNTEREN_CY);
+#elif USE_TIME_COUNTER
+  CSRS(CSR_MCOUNTEREN, HCOUNTEREN_TM);
+#endif
+  hfence_gvma();
+  CSRS(CSR_HENVCFG, HENVCFG_PBMTE);
+#ifdef USE_CYCLE_COUNTER
+  CSRS(CSR_HCOUNTEREN, HCOUNTEREN_CY);
+#elif USE_TIME_COUNTER
+  CSRS(CSR_HCOUNTEREN, HCOUNTEREN_TM);
+#endif
+  hfence_vvma();
+  sfence();
+
+  goto_priv(PRIV_VS);
+#ifdef USE_CYCLE_COUNTER
+  CSRW(sscratch, 1);
+#endif
+
+  printf("Uncache Write Test: pagetype=%d, range=[0x%lx, 0x%lx), pages=%u, words=%d\n",
+    PMBT_TEST_PAGE_TYPE, PMBT_RANGE_START, PMBT_RANGE_END, page_count, range_size / sizeof(uint64_t));
+
+  // 当前香山没有挂载该地址段的设备，所以 write 会返回 denied 和 corrupt；read 会直接报错。  
+  volatile unsigned long start, end;
+  start = myClock();
+  for(uintptr_t addr = PMBT_RANGE_START; addr < PMBT_RANGE_END; addr += sizeof(uint64_t)){
+    write64(addr, addr);
+  }
+  end = myClock();
+  printf("write start: %lu, end: %lu, ticks: %lu\n", start, end, end - start);
+
+  TEST_END();
+}
