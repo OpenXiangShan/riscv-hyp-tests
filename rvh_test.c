@@ -395,6 +395,9 @@ void reset_state(){
 
     goto_priv(PRIV_M);
     CSRW(mstatus, 0ULL);
+    CSRW(CSR_MENVCFG, 0ULL);
+    CSRW(CSR_MCOUNTEREN, 0ULL);
+    CSRW(CSR_SMBLOCKCTL, 0ULL);
     //CSRW(mtvec, 0ULL);
     CSRW(medeleg, 0ULL);
     CSRW(mideleg, 0ULL);
@@ -418,6 +421,8 @@ void reset_state(){
     CSRW(stval, 0ULL);
     CSRW(satp, 0ULL);
     CSRW(CSR_HSTATUS, 0ULL);
+    CSRW(CSR_HENVCFG, 0ULL);
+    CSRW(CSR_HCOUNTEREN, 0ULL);
     CSRW(CSR_HIDELEG, 0ULL);
     CSRW(CSR_HEDELEG, 0ULL);
     CSRW(CSR_HVIP, 0ULL);
