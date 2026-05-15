@@ -35,7 +35,7 @@
     STORE   x28, 27*REGLEN(sp)
     STORE   x29, 28*REGLEN(sp)
     STORE   x30, 29*REGLEN(sp)
-    STORE   x31, 29*REGLEN(sp)
+    STORE   x31, 30*REGLEN(sp)
 .endm
 
 .macro RESTORE_CONTEXT

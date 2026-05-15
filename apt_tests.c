@@ -32,7 +32,7 @@ typedef enum APT_MODE {
 } APT_MODE;
 
 uint64_t make_apt(APT_MODE mode, unsigned id, uint64_t ppn) {
-  return ((uint64_t)mode << 60) | ((uint64_t)id << 44) << ppn;
+  return ((uint64_t)mode << 60) | ((uint64_t)id << 44) | ppn;
 }
 
 bool apt_tests() {
@@ -152,10 +152,10 @@ bool apt_tests() {
 
       check_csr_wrrd("vsatp Sv48",                        CSR_VSATP, make_apt(MODE_SV48,      0,          0), make_apt(MODE_SV48,      0,                              0));
       check_csr_wrrd("vsatp Sv48 ASID",                   CSR_VSATP, make_apt(MODE_SV48, 0xFFFF,          0), make_apt(MODE_SV48, 0xFFFF,                              0));
-      check_csr_wrrd("vsatp Sv48 PPN width limits",       CSR_VSATP, make_apt(MODE_SV48,      0, origin_ppn), make_apt(MODE_SV48,      0, sv48x4_limited_right_vsatp_ppn));
+      check_csr_wrrd("vsatp Sv48 PPN width limits",       CSR_VSATP, make_apt(MODE_SV48,      0, origin_ppn), make_apt(MODE_SV48,      0, sv39x4_limited_right_vsatp_ppn));
 
       CSRW(CSR_VSATP, make_apt(MODE_SV39, 0xFFFF, origin_ppn));
-      check_csr_wrrd("vsatp mode(ill) others(WARL) in MODE_M", CSR_VSATP, make_apt(MODE_ILL, 0, ppn_dead_beef), make_apt(MODE_SV39, 0xFFFF, sv39x4_limited_vsatp_ppn_dead_beef));
+      check_csr_wrrd("vsatp mode(ill) others(WARL) in MODE_M", CSR_VSATP, make_apt(MODE_ILL, 0, ppn_dead_beef), make_apt(MODE_SV39, 0, sv39x4_limited_vsatp_ppn_dead_beef));
     }
   }
 
@@ -178,14 +178,14 @@ bool apt_tests() {
       CSRW(CSR_SATP, make_apt(MODE_BARE, 0, 0));
       check_csr_wrrd("vsatp Sv39",                        CSR_VSATP, make_apt(MODE_SV39,      0,          0), make_apt(MODE_SV39,      0,                              0));
       check_csr_wrrd("vsatp Sv39 ASID",                   CSR_VSATP, make_apt(MODE_SV39, 0xFFFF,          0), make_apt(MODE_SV39, 0xFFFF,                              0));
-      check_csr_wrrd("vsatp Sv39 PPN width limits",       CSR_VSATP, make_apt(MODE_SV39,      0, origin_ppn), make_apt(MODE_SV39,      0, sv39x4_limited_right_vsatp_ppn));
+      check_csr_wrrd("vsatp Sv39 PPN width limits",       CSR_VSATP, make_apt(MODE_SV39,      0, origin_ppn), make_apt(MODE_SV39,      0, sv48x4_limited_right_vsatp_ppn));
 
       check_csr_wrrd("vsatp Sv48",                        CSR_VSATP, make_apt(MODE_SV48,      0,          0), make_apt(MODE_SV48,      0,                              0));
       check_csr_wrrd("vsatp Sv48 ASID",                   CSR_VSATP, make_apt(MODE_SV48, 0xFFFF,          0), make_apt(MODE_SV48, 0xFFFF,                              0));
       check_csr_wrrd("vsatp Sv48 PPN width limits",       CSR_VSATP, make_apt(MODE_SV48,      0, origin_ppn), make_apt(MODE_SV48,      0, sv48x4_limited_right_vsatp_ppn));
 
       CSRW(CSR_VSATP, make_apt(MODE_SV39, 0xFFFF, origin_ppn));
-      check_csr_wrrd("vsatp mode(ill) others(WARL) in MODE_M", CSR_VSATP, make_apt(MODE_ILL, 0, ppn_dead_beef), make_apt(MODE_SV39, 0xFFFF, sv39x4_limited_vsatp_ppn_dead_beef));
+      check_csr_wrrd("vsatp mode(ill) others(WARL) in MODE_M", CSR_VSATP, make_apt(MODE_ILL, 0, ppn_dead_beef), make_apt(MODE_SV39, 0, sv48x4_limited_vsatp_ppn_dead_beef));
     }
   }
 

@@ -95,7 +95,7 @@ static const char* priv_strs[] = {
 
 enum ecall {ECALL_GOTO_PRIV = 1};
 
-extern struct exception {
+extern volatile struct exception {
     bool testing;
     bool triggered;
     enum priv priv;
@@ -129,17 +129,19 @@ extern size_t hyp_test_table_size;
     
 
 #define TEST_ASSERT(test, cond, ...) {\
+    __sync_synchronize();\
+    bool __test_cond = !!(cond);\
     if(LOG_LEVEL >= LOG_DETAIL){\
         size_t line_size = 80;\
         size_t size = strlen(test);\
         printf(CBLU "\t%-70.*s" CDFLT, line_size, test);\
         for(int i = line_size; i < size; i+=line_size)\
             printf(CBLU "\n\t%-70.*s" CDFLT, line_size, &test[i]);\
-        printf("%s" CDFLT, (cond) ? CGRN "PASSED" : CRED "FAILED");\
-        if(!(cond)) { printf("\n\t("); printf(""__VA_ARGS__); printf(")"); }\
+        printf("%s" CDFLT, __test_cond ? CGRN "PASSED" : CRED "FAILED");\
+        if(!__test_cond) { printf("\n\t("); printf(""__VA_ARGS__); printf(")"); }\
         printf("\n");\
     }\
-    test_status = test_status && cond;\
+    test_status = test_status && __test_cond;\
     /*if(!test_status) goto failed; /**/\
 }
 

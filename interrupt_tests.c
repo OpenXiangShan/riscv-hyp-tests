@@ -171,6 +171,8 @@ bool interrupt_tests(){
     CSRS(CSR_HIP, 0x4);
     TEST_SETUP_EXCEPT();
     goto_priv(PRIV_VS);
+    for (unsigned retry = 0; retry < 32 && !excpt.triggered; retry++)
+        __sync_synchronize();
     //CSRS(sstatus, SSTATUS_SIE_BIT);
     TEST_ASSERT("vs sw irq with no delegation", 
         excpt.triggered && excpt.cause == CAUSE_VSSI && excpt.priv == PRIV_HS);
@@ -186,6 +188,8 @@ bool interrupt_tests(){
     goto_priv(PRIV_VS);
     CSRS(sie, 0x2);
     CSRS(sstatus, 0x2);
+    for (unsigned retry = 0; retry < 32 && !excpt.triggered; retry++)
+        __sync_synchronize();
     TEST_ASSERT("vs sw irq with delegation", 
         excpt.triggered && excpt.cause == CAUSE_SSI && excpt.priv == PRIV_VS);
 

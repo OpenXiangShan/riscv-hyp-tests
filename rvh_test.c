@@ -14,7 +14,7 @@ unsigned test_num = 0;
 unsigned curr_priv = PRIV_M;
 unsigned real_priv = PRIV_M;
 
-struct exception excpt;
+volatile struct exception excpt;
 
 uint64_t ecall_args[2];
 
